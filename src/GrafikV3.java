@@ -1,21 +1,35 @@
+import javax.imageio.ImageIO;
 import javax.swing.*;
 import java.awt.*;
 import java.awt.image.BufferStrategy;
+import java.awt.image.BufferedImage;
+import java.io.File;
+import java.io.IOException;
 
+/**
+ * Exempel på en enkel animation. Med repaint() körs paint om och om igen. En bufferstrategy är ett
+ * snyggare sätt att få till buffrad grafik, men den är inte gjord för att köras med repaint därför
+ * hackar det och fönstret ritas inte ut om man inte petar på det.
+ */
 public class GrafikV3 extends Canvas {
     int x, y;
     int x1 = 400;
     int y1 = 300;
     double angle = 0;
-    // Buffrad grafik för att få mindre flimmer. Funkar dåligt med repaint. Fixas med en egen tråd.
+    // Buffrad grafik för att få mindre flimmer. Funkar dåligt med repaint. Fixas i version 4 med en egen tråd.
     BufferStrategy bs;
     int width = 800;
     int height = 600;
-
+    BufferedImage img = null;
 
     public GrafikV3() {
+        try {
+            img = ImageIO.read(new File("supermario.png"));
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
         setSize(width, height);
-        JFrame frame = new JFrame("Grafik");
+        JFrame frame = new JFrame("Grafik version 3");
         frame.add(this);
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         frame.pack();
@@ -43,6 +57,7 @@ public class GrafikV3 extends Canvas {
         drawHouse(460, 400, g);
         drawHouse(520, 400, g);
         drawHouse(x, y, g);
+        g.drawImage(img,600,50,null);
         g.setColor(new Color(0x00FF00));
         g.fillOval(x1, y1, 40, 40);
     }

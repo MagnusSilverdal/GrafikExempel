@@ -19,7 +19,7 @@ public class GrafikV2 extends Canvas {
 
     public GrafikV2() {
         setSize(width, height);
-        JFrame frame = new JFrame("Grafik");
+        JFrame frame = new JFrame("Grafik version 2");
         frame.add(this);
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         frame.pack();

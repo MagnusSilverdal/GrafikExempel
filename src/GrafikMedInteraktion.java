@@ -3,7 +3,7 @@ import java.awt.*;
 import java.awt.event.*;
 import java.awt.image.BufferStrategy;
 
-public class GrafikMedInteraktion extends Canvas{
+public class GrafikMedInteraktion extends Canvas implements Runnable{
 
     int x, y;
     int x1 = 400;
@@ -14,32 +14,70 @@ public class GrafikMedInteraktion extends Canvas{
     int width = 800;
     int height = 600;
     Color color =new Color(0x00FFFF);
+    Thread thread;
+    boolean running = false;
 
     public GrafikMedInteraktion() {
         setSize(width, height);
         JFrame frame = new JFrame("Grafik");
         frame.add(this);
-        //frame.addKeyListener(new KL());
-        frame.addMouseListener(new ML());
+        this.addKeyListener(new KL());
+        this.addMouseListener(new ML());
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         frame.pack();
         frame.setVisible(true);
     }
 
-    public void paint(Graphics g) {
+    public synchronized void start() {
+        running = true;
+        thread = new Thread(this);
+        thread.start();
+    }
+
+    public synchronized void stop() {
+        running = false;
+        try {
+            thread.join();
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public void run() {
+        double ns = 1000000000.0 / 30.0;
+        double delta = 0;
+        long lastTime = System.nanoTime();
+        long timer = System.currentTimeMillis();
+
+        while (running) {
+            long now = System.nanoTime();
+            delta += (now - lastTime) / ns;
+            lastTime = now;
+
+            while(delta >= 1) {
+                render();
+                delta--;
+            }
+            if(System.currentTimeMillis() - timer >= 1000) {
+                timer += 1000;
+            }
+        }
+        stop();
+    }
+
+    public void render() {
         bs = getBufferStrategy();
         if (bs == null) {
             createBufferStrategy(2);
             return;
         }
+        Graphics g = bs.getDrawGraphics();
         // Uppdatera koordinaterna
         update();
         // Rita ut den nya bilden
         draw(g);
         g.dispose();
         bs.show();
-        // Ger en animation. När vi är klara körs paint igen
-        repaint();
     }
 
     public void draw(Graphics g) {
@@ -70,6 +108,13 @@ public class GrafikMedInteraktion extends Canvas{
 
     public static void main(String[] args) {
         GrafikMedInteraktion minGrafik = new GrafikMedInteraktion();
+        java.awt.EventQueue.invokeLater(new Runnable() {
+            public void run()
+            {
+                minGrafik.setVisible(true);
+            }
+        });
+        minGrafik.start();
     }
 
     private class KL implements KeyListener {
@@ -80,6 +125,7 @@ public class GrafikMedInteraktion extends Canvas{
 
         @Override
         public void keyPressed(KeyEvent keyEvent) {
+            System.out.println("Key pressed: " + keyEvent.getKeyChar());
             if (keyEvent.getKeyChar()=='a') {
                 x1-=5;
             } else if (keyEvent.getKeyChar()=='d') {
@@ -97,7 +143,7 @@ public class GrafikMedInteraktion extends Canvas{
         }
     }
 
-    private class ML extends MouseAdapter {
+    private class ML implements MouseListener {
         @Override
         public void mouseClicked(MouseEvent mouseEvent) {
             x1 = mouseEvent.getX();
